@@ -7,7 +7,7 @@ const state = {
 
 const $ = sel => document.querySelector(sel);
 
-function fileToCompressed(file, maxSize = 240, quality = 0.7) {
+function fileToCompressed(file, maxSize = 200, quality = 0.55) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -21,7 +21,12 @@ function fileToCompressed(file, maxSize = 240, quality = 0.7) {
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       try {
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        // WebP 우선 시도 (JPEG 대비 30~40% 작음). 미지원 환경은 자동 fallback
+        let dataUrl = canvas.toDataURL('image/webp', quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
       } catch (e) {
         reject(e);
       }
@@ -69,20 +74,29 @@ function bindSetup() {
   });
 }
 
-function stripDataUrl(dataUrl) {
+function imageToParam(dataUrl) {
+  // 1글자 prefix(w=webp, j=jpeg) + URL-safe base64 (+/= 제거 → -, _ 변환)
+  const prefix = dataUrl.startsWith('data:image/webp') ? 'w' : 'j';
   const i = dataUrl.indexOf(',');
-  return i >= 0 ? dataUrl.slice(i + 1) : '';
+  const b64 = i >= 0 ? dataUrl.slice(i + 1) : '';
+  const safe = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return prefix + safe;
 }
 
-function expandDataUrl(b64) {
-  return `data:image/jpeg;base64,${b64}`;
+function paramToImage(s) {
+  if (!s) return '';
+  const prefix = s[0];
+  let b64 = s.slice(1).replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const mime = prefix === 'w' ? 'image/webp' : 'image/jpeg';
+  return `data:${mime};base64,${b64}`;
 }
 
 function buildShareUrl() {
   const params = new URLSearchParams();
-  params.set('ai', stripDataUrl(state.giftA.image));
+  params.set('ai', imageToParam(state.giftA.image));
   params.set('at', state.giftA.text);
-  params.set('bi', stripDataUrl(state.giftB.image));
+  params.set('bi', imageToParam(state.giftB.image));
   params.set('bt', state.giftB.text);
   const base = location.href.split('?')[0].split('#')[0];
   return `${base}?${params.toString()}`;
@@ -339,8 +353,8 @@ function initFromUrl() {
   const bi = params.get('bi');
   const bt = params.get('bt');
   if (ai && at && bi && bt) {
-    state.giftA = { image: expandDataUrl(ai), text: at };
-    state.giftB = { image: expandDataUrl(bi), text: bt };
+    state.giftA = { image: paramToImage(ai), text: at };
+    state.giftB = { image: paramToImage(bi), text: bt };
     showScreen('play');
     setupPlay();
   } else {
