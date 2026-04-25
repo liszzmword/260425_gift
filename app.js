@@ -7,7 +7,7 @@ const state = {
 
 const $ = sel => document.querySelector(sel);
 
-function fileToCompressed(file, maxSize = 200, quality = 0.55) {
+function fileToCompressed(file, maxSize = 280, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
