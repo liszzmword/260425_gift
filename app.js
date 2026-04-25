@@ -242,9 +242,9 @@ function layoutPlay() {
   const aLeft = Math.random() < 0.5;
   const ay = (pa.height - ah) / 2;
   const by = (pa.height - bh) / 2;
-  // 두 카드를 화면 중앙에 가깝게 배치 (카드 너비의 ~50% 간격)
+  // 두 카드를 화면 중앙에 가깝게 배치
   const centerX = pa.width / 2;
-  const gap = aw * 0.5;
+  const gap = Math.min(aw * 0.3, 50);
   const ax = aLeft ? centerX - gap / 2 - aw : centerX + gap / 2;
   const bx = aLeft ? centerX + gap / 2 : centerX - gap / 2 - bw;
   cardA.style.transform = `translate(${ax}px, ${ay}px)`;

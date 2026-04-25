@@ -179,20 +179,18 @@ button.ghost:active {
 
 .gift-card {
   position: absolute;
-  width: clamp(42px, 13.5vw, 60px);
-  aspect-ratio: 1 / 1;
+  width: clamp(120px, 36vw, 150px);
+  aspect-ratio: 2.6 / 1;
   background: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
   cursor: pointer;
   font-family: inherit;
-  padding: 6px;
+  padding: 6px 10px;
   top: 0;
   left: 0;
   transform: translate(0, 0);
@@ -206,7 +204,7 @@ button.ghost:active {
 }
 
 .card-text {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.2;
   font-weight: 600;
   text-align: center;
@@ -215,8 +213,7 @@ button.ghost:active {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-  padding: 0 4px;
+  width: 100%;
 }
 
 /* ===== Result screen ===== */
