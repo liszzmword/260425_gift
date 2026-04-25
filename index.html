@@ -15,23 +15,11 @@
 
       <div class="gift-form">
         <h2>🅰️ 선물 A <span class="sub">(진짜 줄 선물)</span></h2>
-        <label class="image-input">
-          <input type="file" accept="image/*" data-target="A" hidden />
-          <div class="image-preview" id="previewA">
-            <span class="placeholder">+ 이미지 선택</span>
-          </div>
-        </label>
         <input type="text" id="textA" maxlength="20" placeholder="예: 스타벅스 기프티콘" />
       </div>
 
       <div class="gift-form">
         <h2>🅱️ 선물 B <span class="sub">(미끼 선물 — 도망감)</span></h2>
-        <label class="image-input">
-          <input type="file" accept="image/*" data-target="B" hidden />
-          <div class="image-preview" id="previewB">
-            <span class="placeholder">+ 이미지 선택</span>
-          </div>
-        </label>
         <input type="text" id="textB" maxlength="20" placeholder="예: 양말" />
       </div>
 
@@ -53,11 +41,9 @@
       <h1>받고 싶은 선물을 골라주세요 🎀</h1>
       <div id="playArea">
         <button class="gift-card" id="cardA" type="button">
-          <span class="card-image"></span>
           <span class="card-text"></span>
         </button>
         <button class="gift-card" id="cardB" type="button">
-          <span class="card-image"></span>
           <span class="card-text"></span>
         </button>
       </div>
@@ -66,7 +52,6 @@
     <section id="result" class="screen" hidden>
       <h1 class="celebrate">🎉 축하드립니다!! 🎉</h1>
       <div class="result-gift">
-        <div class="result-image"></div>
         <div class="result-text"></div>
       </div>
       <p class="result-message">위 선물을 받게 되셨습니다!</p>

@@ -1,63 +1,11 @@
 const state = {
   screen: 'setup',
-  giftA: { image: '', text: '' },
-  giftB: { image: '', text: '' },
+  giftA: { text: '' },
+  giftB: { text: '' },
   bPos: { x: 0, y: 0 },
 };
 
 const $ = sel => document.querySelector(sel);
-
-function fileToCompressed(file, maxSize = 280, quality = 0.7) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const ratio = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
-      const w = Math.max(1, Math.round(img.naturalWidth * ratio));
-      const h = Math.max(1, Math.round(img.naturalHeight * ratio));
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      try {
-        // WebP 우선 시도 (JPEG 대비 30~40% 작음). 미지원 환경은 자동 fallback
-        let dataUrl = canvas.toDataURL('image/webp', quality);
-        if (!dataUrl.startsWith('data:image/webp')) {
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-        }
-        resolve(dataUrl);
-      } catch (e) {
-        reject(e);
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('image load failed'));
-    };
-    img.src = url;
-  });
-}
-
-function bindImageInputs() {
-  document.querySelectorAll('input[type="file"][data-target]').forEach(input => {
-    input.addEventListener('change', async () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      try {
-        const dataUrl = await fileToCompressed(file);
-        const target = input.dataset.target;
-        state[`gift${target}`].image = dataUrl;
-        const preview = document.getElementById(`preview${target}`);
-        preview.style.backgroundImage = `url("${dataUrl}")`;
-        preview.classList.add('has-image');
-        validateSetup();
-      } catch (err) {
-        showToast('이미지를 불러올 수 없어요.');
-      }
-    });
-  });
-}
 
 function bindSetup() {
   $('#textA').addEventListener('input', e => {
@@ -74,30 +22,10 @@ function bindSetup() {
   });
 }
 
-function imageToParam(dataUrl) {
-  // 1글자 prefix(w=webp, j=jpeg) + URL-safe base64 (+/= 제거 → -, _ 변환)
-  const prefix = dataUrl.startsWith('data:image/webp') ? 'w' : 'j';
-  const i = dataUrl.indexOf(',');
-  const b64 = i >= 0 ? dataUrl.slice(i + 1) : '';
-  const safe = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return prefix + safe;
-}
-
-function paramToImage(s) {
-  if (!s) return '';
-  const prefix = s[0];
-  let b64 = s.slice(1).replace(/-/g, '+').replace(/_/g, '/');
-  while (b64.length % 4) b64 += '=';
-  const mime = prefix === 'w' ? 'image/webp' : 'image/jpeg';
-  return `data:${mime};base64,${b64}`;
-}
-
 function buildShareUrl() {
   const params = new URLSearchParams();
-  params.set('ai', imageToParam(state.giftA.image));
-  params.set('at', state.giftA.text);
-  params.set('bi', imageToParam(state.giftB.image));
-  params.set('bt', state.giftB.text);
+  params.set('a', state.giftA.text);
+  params.set('b', state.giftB.text);
   const base = location.href.split('?')[0].split('#')[0];
   return `${base}?${params.toString()}`;
 }
@@ -153,7 +81,7 @@ function bindShare() {
 }
 
 function validateSetup() {
-  const ok = state.giftA.image && state.giftA.text && state.giftB.image && state.giftB.text;
+  const ok = state.giftA.text && state.giftB.text;
   $('#startBtn').disabled = !ok;
 }
 
@@ -168,9 +96,7 @@ function setupPlay() {
   const cardA = $('#cardA');
   const cardB = $('#cardB');
 
-  cardA.querySelector('.card-image').style.backgroundImage = `url("${state.giftA.image}")`;
   cardA.querySelector('.card-text').textContent = state.giftA.text;
-  cardB.querySelector('.card-image').style.backgroundImage = `url("${state.giftB.image}")`;
   cardB.querySelector('.card-text').textContent = state.giftB.text;
 
   layoutPlay();
@@ -328,7 +254,6 @@ function layoutPlay() {
 
 function showResult() {
   showScreen('result');
-  $('.result-image').style.backgroundImage = `url("${state.giftA.image}")`;
   $('.result-text').textContent = state.giftA.text;
   if (window.confetti) {
     const burst = (origin) =>
@@ -348,13 +273,11 @@ function bindResult() {
 
 function initFromUrl() {
   const params = new URLSearchParams(location.search);
-  const ai = params.get('ai');
-  const at = params.get('at');
-  const bi = params.get('bi');
-  const bt = params.get('bt');
-  if (ai && at && bi && bt) {
-    state.giftA = { image: paramToImage(ai), text: at };
-    state.giftB = { image: paramToImage(bi), text: bt };
+  const a = params.get('a');
+  const b = params.get('b');
+  if (a && b) {
+    state.giftA = { text: a };
+    state.giftB = { text: b };
     showScreen('play');
     setupPlay();
   } else {
@@ -364,7 +287,6 @@ function initFromUrl() {
 
 window.addEventListener('resize', layoutPlay);
 
-bindImageInputs();
 bindSetup();
 bindShare();
 bindResult();
