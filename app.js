@@ -104,6 +104,9 @@ function setupPlay() {
   cardA.onclick = showResult;
 
   lastPointer = null;
+  lastMouseX = -9999;
+  lastMouseY = -9999;
+  stopContinuousDodge();
   const playArea = $('#playArea');
   playArea.onpointermove = e => maybeDodge(e.clientX, e.clientY);
   cardB.onpointerenter = e => nudge(e.clientX, e.clientY, 0, 0, 30);
@@ -113,14 +116,20 @@ function setupPlay() {
   };
 }
 
-const DODGE_RADIUS = 100;
-let lastPointer = null; // { x, y, t }
+const DODGE_RADIUS = 110;
+let lastPointer = null; // { x, y, t } — 속도 계산용
+let lastMouseX = -9999;
+let lastMouseY = -9999;
+let dodgeTimer = null;
 
 function maybeDodge(px, py) {
   if (state.screen !== 'play') return;
 
+  lastMouseX = px;
+  lastMouseY = py;
+
   const t = performance.now();
-  let speed = 0; // px/ms
+  let speed = 0;
   if (lastPointer) {
     const dt = t - lastPointer.t;
     if (dt > 0 && dt < 200) {
@@ -137,6 +146,35 @@ function maybeDodge(px, py) {
 
   if (dist > DODGE_RADIUS) return;
   nudge(px, py, dist, speed);
+  startContinuousDodge();
+}
+
+// 마우스가 카드 근처에서 멈춰 있어도 카드가 계속 미끄러지듯 도망가게 함
+function startContinuousDodge() {
+  if (dodgeTimer) return;
+  dodgeTimer = setInterval(() => {
+    if (state.screen !== 'play') {
+      stopContinuousDodge();
+      return;
+    }
+    const cardB = $('#cardB');
+    const r = cardB.getBoundingClientRect();
+    const bcx = r.left + r.width / 2;
+    const bcy = r.top + r.height / 2;
+    const dist = Math.hypot(lastMouseX - bcx, lastMouseY - bcy);
+    if (dist < DODGE_RADIUS) {
+      nudge(lastMouseX, lastMouseY, dist, 0);
+    } else {
+      stopContinuousDodge();
+    }
+  }, 80);
+}
+
+function stopContinuousDodge() {
+  if (dodgeTimer) {
+    clearInterval(dodgeTimer);
+    dodgeTimer = null;
+  }
 }
 
 function nudge(pointerX, pointerY, distToB, speed, overrideStep = null) {
@@ -253,6 +291,7 @@ function layoutPlay() {
 }
 
 function showResult() {
+  stopContinuousDodge();
   showScreen('result');
   $('.result-text').textContent = state.giftA.text;
   if (window.confetti) {
